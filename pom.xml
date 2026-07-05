@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ibm.example</groupId>
+    <artifactId>liberty-ssl-access</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <name>Liberty SSL Access</name>
+    <description>Different ways to access the SSL Context</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
+        <jakartaee.version>10.0.0</jakartaee.version>
+        <liberty.version>26.0.0.6</liberty.version>
+        <jandex.version>3.6.0</jandex.version>
+    </properties>
+
+    <dependencies>
+        <!-- Jakarta EE 10 API -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>${jakartaee.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- IBM WebSphere SSL API (Liberty ibm-api — provided at runtime) -->
+        <dependency>
+            <groupId>com.ibm.websphere.appserver.api</groupId>
+            <artifactId>com.ibm.websphere.appserver.api.ssl</artifactId>
+            <version>1.9.114</version>
+            <scope>compile</scope>
+        </dependency>
+        </dependencies>
+
+    <build>
+        <finalName>liberty-ssl-access</finalName>
+        <plugins>
+            <!-- Maven Compiler Plugin for Java 25 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <release>25</release>
+                </configuration>
+            </plugin>
+
+            <!-- Maven WAR Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <packagingExcludes>pom.xml</packagingExcludes>
+                </configuration>
+            </plugin>
+
+            <!-- Jandex Maven Plugin - Create annotation index for faster CDI startup -->
+            <plugin>
+                <groupId>io.smallrye</groupId>
+                <artifactId>jandex-maven-plugin</artifactId>
+                <version>${jandex.version}</version>
+                <executions>
+                    <execution>
+                        <id>make-index</id>
+                        <goals>
+                            <goal>jandex</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Liberty Maven Plugin -->
+            <plugin>
+                <groupId>io.openliberty.tools</groupId>
+                <artifactId>liberty-maven-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <serverName>LibertySSlContext</serverName>
+                    <configDirectory>${project.basedir}/src/main/liberty/config</configDirectory>
+                    <bootstrapProperties>
+                        <default.http.port>9080</default.http.port>
+                        <default.https.port>9443</default.https.port>
+                        <app.context.root>/</app.context.root>
+                    </bootstrapProperties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
