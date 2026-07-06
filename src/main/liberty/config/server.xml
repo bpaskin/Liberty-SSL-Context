@@ -20,11 +20,16 @@
     </httpEndpoint>
 
     <!-- SSL Configuration with TLS 1.3 -->
+    <!-- clientKeyAlias        — alias used when THIS server presents a cert on outbound calls  -->
+    <!-- clientAuthenticationSupported — accepts a client cert from inbound callers if offered, -->
+    <!--                                 but does not require one (no forced mTLS)              -->
     <ssl id="defaultSSLConfig"
          keyStoreRef="defaultKeyStore"
          trustStoreRef="defaultTrustStore"
          sslProtocol="TLSv1.3"
-         enabledCiphers="TLS_AES_256_GCM_SHA384 TLS_AES_128_GCM_SHA256"/>
+         enabledCiphers="TLS_AES_256_GCM_SHA384 TLS_AES_128_GCM_SHA256"
+         clientKeyAlias="clientCert"
+         trustDefaultCerts="true"/>
 
     <!-- Keystore Configuration -->
     <keyStore id="defaultKeyStore"
