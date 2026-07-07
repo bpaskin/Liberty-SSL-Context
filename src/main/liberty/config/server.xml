@@ -64,4 +64,7 @@
     <!-- Web Container Configuration -->
     <webContainer deferServletLoad="false"/>
 
+    <!-- Application Manager to expand the application on disk and use Jandex -->
+    <applicationManager autoExpand="true" useJandex="true" useJandexUnderClasses="true"/>
+
 </server>
