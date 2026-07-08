@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
  */
 @WebServlet("/sslcall")
 public class SSLClientCallServlet extends HttpServlet {
+
+    private static final Logger LOG = Logger.getLogger(SSLClientCallServlet.class.getName());
 
     /** Target HTTPS endpoint to call. */
     private static final String TARGET_URL = "https://ibm.com";
@@ -41,20 +44,26 @@ public class SSLClientCallServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        LOG.fine("doGet invoked");
+
         // --- Build an SSLContext with the chosen client cert alias ---
+        LOG.fine("Building SSLContext for ssl config id='" + SSL_CONFIG_ID + "' alias='" + CLIENT_CERT_ALIAS + "'");
         SSLContext sslContext;
         try {
             JSSEHelper helper = JSSEHelper.getInstance();
             Properties sslProps = helper.getProperties(SSL_CONFIG_ID);
             sslProps.setProperty(Constants.SSLPROP_KEY_STORE_CLIENT_ALIAS, CLIENT_CERT_ALIAS);
             sslContext = helper.getSSLContext(null, sslProps);
+            LOG.fine("SSLContext built successfully");
         } catch (Exception e) {
+            LOG.warning("Failed to build SSLContext for alias='" + CLIENT_CERT_ALIAS + "': " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Failed to build SSLContext for alias '" + CLIENT_CERT_ALIAS + "': " + e.getMessage());
             return;
         }
 
         // --- Make the outbound HTTPS call ---
+        LOG.fine("Opening HTTPS connection to " + TARGET_URL);
         String responseBody;
         int statusCode;
         try {
@@ -64,11 +73,13 @@ public class SSLClientCallServlet extends HttpServlet {
             conn.setConnectTimeout(5_000);
             conn.setReadTimeout(10_000);
             statusCode = conn.getResponseCode();
+            LOG.fine("Outbound HTTP status: " + statusCode);
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 responseBody = reader.lines().collect(Collectors.joining("\n"));
             }
         } catch (IOException e) {
+            LOG.warning("Outbound HTTPS call to '" + TARGET_URL + "' failed: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_BAD_GATEWAY,
                     "Outbound HTTPS call to '" + TARGET_URL + "' failed: " + e.getMessage());
             return;
@@ -84,5 +95,6 @@ public class SSLClientCallServlet extends HttpServlet {
             out.println("--- Response body ---");
             out.println(responseBody);
         }
+        LOG.fine("doGet completed");
     }
 }

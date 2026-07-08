@@ -44,13 +44,13 @@
     <build>
         <finalName>liberty-ssl-access</finalName>
         <plugins>
-            <!-- Maven Compiler Plugin for Java 25 -->
+            <!-- Maven Compiler Plugin for Java 17 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.0</version>
                 <configuration>
-                    <release>25</release>
+                    <release>17</release>
                 </configuration>
             </plugin>
 
