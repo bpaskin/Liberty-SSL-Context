@@ -23,7 +23,10 @@
     <!-- clientKeyAlias        — alias used when THIS server presents a cert on outbound calls  -->
     <!-- clientAuthenticationSupported — accepts a client cert from inbound callers if offered, -->
     <!--                                 but does not require one (no forced mTLS)              -->
-    <ssl id="defaultSSLConfig"
+
+    <sslDefault sslRef="pizzaSSLConfig"/>
+    
+    <ssl id="pizzaSSLConfig"
          keyStoreRef="defaultKeyStore"
          trustStoreRef="defaultTrustStore"
          sslProtocol="TLSv1.3"

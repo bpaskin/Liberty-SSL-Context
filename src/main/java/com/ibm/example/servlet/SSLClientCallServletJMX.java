@@ -54,7 +54,7 @@ public class SSLClientCallServletJMX extends HttpServlet {
     private static final String SSL_FACTORY_PID = "com.ibm.ws.ssl.repertoire";
 
     /** Liberty singleton PID for the <sslDefault> element */
-    private static final String SSL_DEFAULT_PID = "com.ibm.ws.ssl.sslDefault";
+    private static final String SSL_DEFAULT_PID = "com.ibm.ws.ssl.default";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -84,27 +84,41 @@ public class SSLClientCallServletJMX extends HttpServlet {
         }
 
         // --- Step 2: read <sslDefault> to discover the preferred sslRef ---
+        // <sslDefault> is a singleton — use getConfigurations(service.pid=...) to obtain
+        // the runtime-assigned pid token, then pass that token to getProperties.
         String sslRef = null;
         try {
-            LOG.fine("Querying <sslDefault> via PID: " + SSL_DEFAULT_PID);
-            TabularData defaultProps = (TabularData) mbs.invoke(
+            LOG.fine("Querying <sslDefault> singleton via service.pid filter: " + SSL_DEFAULT_PID);
+            String[][] defaultConfigs = (String[][]) mbs.invoke(
                     configAdminMBean,
-                    "getProperties",
-                    new Object[]{ SSL_DEFAULT_PID },
+                    "getConfigurations",
+                    new Object[]{ "(service.pid=" + SSL_DEFAULT_PID + ")" },
                     new String[]{ String.class.getName() });
-            if (defaultProps != null) {
-                CompositeData refRow = defaultProps.get(new Object[]{ "sslRef" });
-                if (refRow != null) {
-                    sslRef = (String) refRow.get("Value");
-                    LOG.fine("<sslDefault> sslRef = " + sslRef);
+
+            if (defaultConfigs != null && defaultConfigs.length > 0) {
+                String defaultPid = defaultConfigs[0][0];
+                LOG.fine("<sslDefault> runtime pid token: " + defaultPid);
+                TabularData defaultProps = (TabularData) mbs.invoke(
+                        configAdminMBean,
+                        "getProperties",
+                        new Object[]{ defaultPid },
+                        new String[]{ String.class.getName() });
+                if (defaultProps != null) {
+                    CompositeData refRow = defaultProps.get(new Object[]{ "sslRef" });
+                    if (refRow != null) {
+                        sslRef = (String) refRow.get("Value");
+                        LOG.fine("<sslDefault> sslRef = " + sslRef);
+                    } else {
+                        LOG.fine("<sslDefault> exists but has no sslRef attribute");
+                    }
                 } else {
-                    LOG.fine("<sslDefault> exists but has no sslRef attribute");
+                    LOG.fine("<sslDefault> getProperties returned null for pid token: " + defaultPid);
                 }
             } else {
-                LOG.fine("<sslDefault> getProperties returned null");
+                LOG.fine("<sslDefault> not present in OSGi config; will use first <ssl> entry");
             }
         } catch (Exception e) {
-            LOG.fine("<sslDefault> not found or unreadable (" + e.getMessage() + "); will use first <ssl> entry");
+            LOG.fine("<sslDefault> query failed (" + e.getMessage() + "); will use first <ssl> entry");
         }
 
         // --- Step 3: query all <ssl> entries ---
